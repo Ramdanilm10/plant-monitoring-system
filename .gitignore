@@ -1,0 +1,106 @@
+# =========================================================
+# Environment variables and secrets
+# =========================================================
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Environment template tetap boleh masuk repository
+!**/.env.example
+!**/.env.*.example
+
+# Private keys and certificates
+*.pem
+*.key
+*.pfx
+*.p12
+*.jks
+cert.pem
+private.key
+
+# Cloudflare local credentials
+.cloudflare/
+**/.cloudflared/
+cert.pem
+*.json.credentials
+
+# =========================================================
+# Database backup
+# =========================================================
+backups/
+**/backups/
+*.dump
+*.backup
+*.bak
+*.sql.gz
+*.tar.gz
+
+# =========================================================
+# Project archives
+# =========================================================
+*.zip
+*.rar
+*.7z
+
+# =========================================================
+# Go build output
+# =========================================================
+backend/plant-monitoring-backend
+backend/plant-monitoring-backend.exe
+*.exe
+*.test
+coverage.out
+coverage.html
+vendor/
+
+# =========================================================
+# Node.js / React / Vite
+# =========================================================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+node_modules/
+dist/
+.vite/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================================================
+# Application runtime
+# =========================================================
+runtime/
+**/runtime/
+
+*.pid
+*.log
+*.stdout.log
+*.stderr.log
+public-url.txt
+
+# =========================================================
+# IDE
+# =========================================================
+.vscode/
+.idea/
+*.code-workspace
+
+# =========================================================
+# Operating system
+# =========================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================================================
+# Temporary files
+# =========================================================
+*.tmp
+*.temp
+*.swp
+*.swo
+~$*
