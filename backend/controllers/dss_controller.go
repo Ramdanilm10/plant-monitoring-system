@@ -42,18 +42,18 @@ type dssRecommendation struct {
 }
 
 type dssResponse struct {
-	HasData        bool                         `json:"has_data"`
-	Plant          models.Plant                 `json:"plant"`
-	Range          string                       `json:"range"`
-	RangeLabel     string                       `json:"range_label"`
-	TotalReadings  int64                        `json:"total_readings"`
-	PeriodStart    *time.Time                    `json:"period_start"`
-	PeriodEnd      *time.Time                    `json:"period_end"`
-	HealthScore    float64                       `json:"health_score"`
-	Status         string                        `json:"status"`
-	Summary        string                        `json:"summary"`
-	Metrics        map[string]dssMetric           `json:"metrics"`
-	Recommendations []dssRecommendation          `json:"recommendations"`
+	HasData         bool                 `json:"has_data"`
+	Plant           models.Plant         `json:"plant"`
+	Range           string               `json:"range"`
+	RangeLabel      string               `json:"range_label"`
+	TotalReadings   int64                `json:"total_readings"`
+	PeriodStart     *time.Time           `json:"period_start"`
+	PeriodEnd       *time.Time           `json:"period_end"`
+	HealthScore     float64              `json:"health_score"`
+	Status          string               `json:"status"`
+	Summary         string               `json:"summary"`
+	Metrics         map[string]dssMetric `json:"metrics"`
+	Recommendations []dssRecommendation  `json:"recommendations"`
 }
 
 type dssAggregate struct {
@@ -104,6 +104,11 @@ var allowedDSSRanges = map[string]dssRangeConfig{
 		Label:   "6 Jam",
 		Seconds: 6 * 60 * 60,
 	},
+	"12h": {
+		Code:    "12h",
+		Label:   "12 Jam",
+		Seconds: 12 * 60 * 60,
+	},
 	"24h": {
 		Code:    "24h",
 		Label:   "24 Jam",
@@ -144,7 +149,7 @@ func GetDSSAnalysis(c *gin.Context) {
 
 	if !valid {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Rentang DSS tidak valid. Gunakan 1h, 6h, 24h, 7d, atau 30d.",
+			"message": "Rentang DSS tidak valid. Gunakan 1h, 6h, 12h, 24h, 7d, atau 30d.",
 		})
 
 		return
@@ -351,15 +356,15 @@ func GetDSSAnalysis(c *gin.Context) {
 
 	if aggregate.Total == 0 {
 		response := dssResponse{
-			HasData:       false,
-			Plant:         plant,
-			Range:         selectedRange.Code,
-			RangeLabel:    selectedRange.Label,
-			TotalReadings: 0,
-			HealthScore:   0,
-			Status:        "BELUM ADA DATA",
-			Summary:       "Belum tersedia data sensor pada rentang waktu yang dipilih.",
-			Metrics:       map[string]dssMetric{},
+			HasData:         false,
+			Plant:           plant,
+			Range:           selectedRange.Code,
+			RangeLabel:      selectedRange.Label,
+			TotalReadings:   0,
+			HealthScore:     0,
+			Status:          "BELUM ADA DATA",
+			Summary:         "Belum tersedia data sensor pada rentang waktu yang dipilih.",
+			Metrics:         map[string]dssMetric{},
 			Recommendations: []dssRecommendation{},
 		}
 
@@ -568,9 +573,9 @@ func createDSSRecommendations(
 		recommendations = append(
 			recommendations,
 			dssRecommendation{
-				Level: "info",
-				Title: "Data belum cukup",
-				Detail: "Jumlah pembacaan masih sedikit. Kumpulkan minimal tiga pembacaan sebelum menyimpulkan tren perawatan.",
+				Level:  "info",
+				Title:  "Data belum cukup",
+				Detail: "Jumlah pembacaan masih sedikit. Kumpulkan minimal tiga pembacaan sebelum menyimpulkan kondisi perawatan.",
 			},
 		)
 	}
@@ -582,7 +587,7 @@ func createDSSRecommendations(
 				Level: recommendationLevel(
 					soil.BelowPercent,
 				),
-				Title: "Kelembapan tanah sering rendah",
+				Title:  "Kelembapan tanah sering rendah",
 				Detail: "Periksa media tanam dan tingkatkan frekuensi penyiraman secara bertahap. Hindari penyiraman berlebihan sekaligus.",
 			},
 		)
@@ -595,7 +600,7 @@ func createDSSRecommendations(
 				Level: recommendationLevel(
 					soil.AbovePercent,
 				),
-				Title: "Kelembapan tanah sering tinggi",
+				Title:  "Kelembapan tanah sering tinggi",
 				Detail: "Kurangi penyiraman dan periksa drainase agar akar tidak terlalu lama berada pada media yang basah.",
 			},
 		)
@@ -608,7 +613,7 @@ func createDSSRecommendations(
 				Level: recommendationLevel(
 					temperature.BelowPercent,
 				),
-				Title: "Suhu sering terlalu rendah",
+				Title:  "Suhu sering terlalu rendah",
 				Detail: "Pindahkan tanaman ke area yang lebih hangat atau kurangi paparan udara dingin.",
 			},
 		)
@@ -621,7 +626,7 @@ func createDSSRecommendations(
 				Level: recommendationLevel(
 					temperature.AbovePercent,
 				),
-				Title: "Suhu sering terlalu tinggi",
+				Title:  "Suhu sering terlalu tinggi",
 				Detail: "Kurangi paparan panas langsung dan perbaiki sirkulasi udara di sekitar tanaman.",
 			},
 		)
@@ -634,7 +639,7 @@ func createDSSRecommendations(
 				Level: recommendationLevel(
 					humidity.BelowPercent,
 				),
-				Title: "Kelembapan udara sering rendah",
+				Title:  "Kelembapan udara sering rendah",
 				Detail: "Pertimbangkan peningkatan kelembapan lingkungan tanpa membuat media tanam terlalu basah.",
 			},
 		)
@@ -647,7 +652,7 @@ func createDSSRecommendations(
 				Level: recommendationLevel(
 					humidity.AbovePercent,
 				),
-				Title: "Kelembapan udara sering tinggi",
+				Title:  "Kelembapan udara sering tinggi",
 				Detail: "Tingkatkan ventilasi untuk mengurangi risiko jamur dan penyakit tanaman.",
 			},
 		)
@@ -657,8 +662,8 @@ func createDSSRecommendations(
 		recommendations = append(
 			recommendations,
 			dssRecommendation{
-				Level: "success",
-				Title: "Pertahankan perawatan",
+				Level:  "success",
+				Title:  "Pertahankan perawatan",
 				Detail: "Kondisi historis berada dalam rentang ideal. Pertahankan pola penyiraman dan lingkungan saat ini.",
 			},
 		)

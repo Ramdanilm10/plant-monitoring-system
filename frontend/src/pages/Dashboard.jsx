@@ -32,6 +32,10 @@ const HISTORY_RANGES = [
     label: "6 Jam",
   },
   {
+    value: "12h",
+    label: "12 Jam",
+  },
+  {
     value: "24h",
     label: "24 Jam",
   },
@@ -686,6 +690,9 @@ function Dashboard() {
                     readings={
                       historyReadings
                     }
+                    rangeLabel={
+                      selectedRangeLabel
+                    }
                   />
 
                   <SensorHistoryChart
@@ -693,6 +700,9 @@ function Dashboard() {
                     description="Perubahan suhu udara selama periode terpilih."
                     readings={
                       historyReadings
+                    }
+                    rangeLabel={
+                      selectedRangeLabel
                     }
                     dataKey="temperature"
                     unit="°C"
@@ -705,6 +715,9 @@ function Dashboard() {
                     readings={
                       historyReadings
                     }
+                    rangeLabel={
+                      selectedRangeLabel
+                    }
                     dataKey="humidity"
                     unit="%"
                     stroke="#2563eb"
@@ -715,6 +728,9 @@ function Dashboard() {
                     description="Perubahan kelembapan media tanam selama periode terpilih."
                     readings={
                       historyReadings
+                    }
+                    rangeLabel={
+                      selectedRangeLabel
                     }
                     dataKey="soil_moisture"
                     unit="%"

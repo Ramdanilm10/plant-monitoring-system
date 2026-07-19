@@ -40,6 +40,12 @@ var allowedHistoryRanges = map[string]historyRange{
 		RangeSeconds:  6 * 60 * 60,
 		BucketSeconds: 5 * 60,
 	},
+	"12h": {
+		Code:          "12h",
+		Label:         "12 Jam",
+		RangeSeconds:  12 * 60 * 60,
+		BucketSeconds: 10 * 60,
+	},
 	"24h": {
 		Code:          "24h",
 		Label:         "24 Jam",
@@ -88,7 +94,7 @@ func GetSensorHistory(c *gin.Context) {
 		c.JSON(
 			http.StatusBadRequest,
 			gin.H{
-				"message": "Rentang histori tidak valid. Gunakan 1h, 6h, 24h, 7d, atau 30d.",
+				"message": "Rentang histori tidak valid. Gunakan 1h, 6h, 12h, 24h, 7d, atau 30d.",
 			},
 		)
 

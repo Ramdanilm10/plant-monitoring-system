@@ -225,6 +225,7 @@ function SensorHistoryChart({
   title,
   description,
   readings,
+  rangeLabel = "rentang terpilih",
   dataKey,
   unit,
   stroke,
@@ -259,7 +260,7 @@ function SensorHistoryChart({
             <h3 className="font-semibold text-slate-950">{title}</h3>
             <p className="mt-1 text-sm text-slate-500">{description}</p>
             <p className="mt-2 text-xs font-medium text-slate-400">
-              {data.length} titik pembacaan - waktu WIB
+              {data.length} titik pembacaan selama {rangeLabel} - waktu WIB
             </p>
           </div>
 
@@ -273,10 +274,26 @@ function SensorHistoryChart({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <Statistic label="Minimum" value={`${formatNumber(minimum)}${unit}`} />
-          <Statistic label="Rata-rata" value={`${formatNumber(average)}${unit}`} />
-          <Statistic label="Maksimum" value={`${formatNumber(maximum)}${unit}`} />
+        <p className="mt-5 text-xs leading-5 text-slate-500">
+          Nilai minimum, rata-rata, dan maksimum dihitung dari seluruh pembacaan selama {rangeLabel} terakhir.
+        </p>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <Statistic
+            label="Minimum"
+            value={`${formatNumber(minimum)}${unit}`}
+            periodLabel={rangeLabel}
+          />
+          <Statistic
+            label="Rata-rata"
+            value={`${formatNumber(average)}${unit}`}
+            periodLabel={rangeLabel}
+          />
+          <Statistic
+            label="Maksimum"
+            value={`${formatNumber(maximum)}${unit}`}
+            periodLabel={rangeLabel}
+          />
         </div>
       </header>
 
@@ -323,7 +340,10 @@ function SensorHistoryChart({
   );
 }
 
-function CombinedSensorHistoryChart({ readings }) {
+function CombinedSensorHistoryChart({
+  readings,
+  rangeLabel = "rentang terpilih",
+}) {
   const normalized = normalize(readings);
   const temperature = series(normalized, "temperature");
   const humidity = series(normalized, "humidity");
@@ -359,7 +379,7 @@ function CombinedSensorHistoryChart({ readings }) {
           Sumbu kiri menunjukkan suhu. Sumbu kanan memakai rentang tetap 0-100% untuk kelembapan udara dan tanah.
         </p>
         <p className="mt-2 text-xs text-slate-400">
-          {normalized.length} waktu pembacaan - waktu grafik menggunakan WIB.
+          {normalized.length} waktu pembacaan selama {rangeLabel} - waktu grafik menggunakan WIB.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-3">
@@ -591,11 +611,18 @@ function Legend({ color, label }) {
   );
 }
 
-function Statistic({ label, value }) {
+function Statistic({
+  label,
+  value,
+  periodLabel,
+}) {
   return (
     <div className="rounded-xl bg-slate-50 px-4 py-3">
       <p className="text-xs font-medium text-slate-500">{label}</p>
       <p className="mt-1 font-semibold text-slate-900">{value}</p>
+      <p className="mt-1 text-[10px] leading-4 text-slate-400">
+        Periode {periodLabel}
+      </p>
     </div>
   );
 }

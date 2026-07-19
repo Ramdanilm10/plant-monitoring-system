@@ -22,6 +22,32 @@ function formatNumber(value) {
   ).format(number);
 }
 
+
+function formatDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return `${new Intl.DateTimeFormat(
+    "id-ID",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Jakarta",
+    },
+  ).format(date)} WIB`;
+}
+
 function DSSAnalysisPanel({
   plantId,
   range,
@@ -165,12 +191,21 @@ function DSSAnalysisPanel({
               {analysis.summary}
             </p>
 
-            <p className="mt-3 text-xs text-slate-400">
-              Berdasarkan{" "}
-              {analysis.total_readings}{" "}
-              pembacaan selama{" "}
-              {analysis.range_label}.
-            </p>
+            <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold text-slate-600">
+                Rentang analisis: {analysis.range_label} terakhir
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                Kesimpulan dihitung dari {analysis.total_readings} pembacaan yang tersedia pada rentang waktu tersebut.
+              </p>
+
+              {analysis.period_start && analysis.period_end && (
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Data pengukuran tersedia dari {formatDateTime(analysis.period_start)} sampai {formatDateTime(analysis.period_end)}.
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="rounded-2xl bg-slate-950 px-6 py-5 text-white">
@@ -208,17 +243,35 @@ function DSSAnalysisPanel({
             metric={
               metrics.temperature
             }
+            rangeLabel={
+              analysis.range_label
+            }
+            totalReadings={
+              analysis.total_readings
+            }
           />
 
           <MetricCard
             metric={
               metrics.humidity
             }
+            rangeLabel={
+              analysis.range_label
+            }
+            totalReadings={
+              analysis.total_readings
+            }
           />
 
           <MetricCard
             metric={
               metrics.soil_moisture
+            }
+            rangeLabel={
+              analysis.range_label
+            }
+            totalReadings={
+              analysis.total_readings
             }
           />
         </div>
@@ -251,21 +304,26 @@ function DSSAnalysisPanel({
 
 function MetricCard({
   metric,
+  rangeLabel,
+  totalReadings,
 }) {
   if (!metric) {
     return null;
   }
 
+  const periodLabel =
+    rangeLabel || "rentang terpilih";
+
   return (
     <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="font-semibold text-slate-950">
             {metric.label}
           </h3>
 
           <p className="mt-1 text-xs text-slate-500">
-            Ideal{" "}
+            Batas ideal{" "}
             {formatNumber(
               metric.ideal_minimum,
             )}
@@ -277,17 +335,22 @@ function MetricCard({
           </p>
         </div>
 
-        <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm">
-          Tren {metric.trend}
+        <span className="inline-flex w-fit rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm">
+          Periode {periodLabel}
         </span>
       </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-2">
+      <p className="mt-4 text-xs leading-5 text-slate-500">
+        Nilai minimum, rata-rata, dan maksimum dihitung dari {totalReadings} pembacaan selama {periodLabel} terakhir.
+      </p>
+
+      <div className="mt-3 grid grid-cols-3 gap-2">
         <SmallStatistic
           label="Minimum"
           value={`${formatNumber(
             metric.minimum,
           )}${metric.unit}`}
+          periodLabel={periodLabel}
         />
 
         <SmallStatistic
@@ -295,6 +358,7 @@ function MetricCard({
           value={`${formatNumber(
             metric.average,
           )}${metric.unit}`}
+          periodLabel={periodLabel}
         />
 
         <SmallStatistic
@@ -302,33 +366,40 @@ function MetricCard({
           value={`${formatNumber(
             metric.maximum,
           )}${metric.unit}`}
+          periodLabel={periodLabel}
         />
       </div>
 
-      <div className="mt-5 space-y-3">
-        <PercentageBar
-          label="Di bawah ideal"
-          value={
-            metric.below_percent
-          }
-          type="low"
-        />
+      <div className="mt-5 rounded-xl bg-white p-4">
+        <p className="text-xs font-semibold text-slate-700">
+          Distribusi kondisi selama {periodLabel} terakhir
+        </p>
 
-        <PercentageBar
-          label="Dalam kondisi ideal"
-          value={
-            metric.normal_percent
-          }
-          type="normal"
-        />
+        <p className="mt-1 text-[11px] leading-5 text-slate-500">
+          “Di bawah rata-rata” pada ringkasan ini mengacu pada pembacaan di bawah batas minimum ideal tanaman.
+        </p>
 
-        <PercentageBar
-          label="Di atas ideal"
-          value={
-            metric.above_percent
-          }
-          type="high"
-        />
+        <div className="mt-4 space-y-3">
+          <PercentageBar
+            label="Di bawah rata-rata"
+            value={
+              metric.below_percent
+            }
+            type="low"
+          />
+
+          <PercentageBar
+            label="Dalam kondisi ideal"
+            value={
+              metric.normal_percent
+            }
+            type="normal"
+          />
+        </div>
+
+        <p className="mt-3 text-[11px] leading-5 text-slate-400">
+          Ringkasan menampilkan dua indikator yang diminta. Persentase tidak selalu berjumlah 100% karena pembacaan di atas batas ideal tidak ditampilkan.
+        </p>
       </div>
     </article>
   );
@@ -337,6 +408,7 @@ function MetricCard({
 function SmallStatistic({
   label,
   value,
+  periodLabel,
 }) {
   return (
     <div className="rounded-xl bg-white p-3">
@@ -346,6 +418,10 @@ function SmallStatistic({
 
       <p className="mt-1 text-sm font-semibold text-slate-950">
         {value}
+      </p>
+
+      <p className="mt-1 text-[10px] leading-4 text-slate-400">
+        Selama {periodLabel}
       </p>
     </div>
   );
@@ -364,8 +440,7 @@ function PercentageBar({
   const barClass = {
     low: "bg-amber-500",
     normal: "bg-emerald-600",
-    high: "bg-red-500",
-  }[type];
+  }[type] ?? "bg-slate-500";
 
   return (
     <div>
