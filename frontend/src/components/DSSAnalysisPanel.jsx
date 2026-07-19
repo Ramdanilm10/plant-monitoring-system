@@ -198,20 +198,20 @@ function DSSAnalysisPanel({
               </p>
 
               <p className="mt-1 text-xs leading-5 text-slate-500">
-                Analisis dihitung berdasarkan{" "}
+                Kesimpulan analisis dihitung dari{" "}
                 {analysis.total_readings} pembacaan
-                yang tersedia dalam rentang waktu
-                tersebut.
+                yang tersedia pada rentang waktu
+                yang dipilih.
               </p>
 
               {analysis.period_start &&
                 analysis.period_end && (
                   <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Data pengukuran tersedia sejak{" "}
+                    Data pengukuran tersedia dari{" "}
                     {formatDateTime(
                       analysis.period_start,
                     )}{" "}
-                    hingga{" "}
+                    sampai{" "}
                     {formatDateTime(
                       analysis.period_end,
                     )}
@@ -336,7 +336,7 @@ function MetricCard({
           </h3>
 
           <p className="mt-1 text-xs text-slate-500">
-            Rentang ideal{" "}
+            Batas ideal{" "}
             {formatNumber(
               metric.ideal_minimum,
             )}
@@ -355,7 +355,7 @@ function MetricCard({
 
       <p className="mt-4 text-xs leading-5 text-slate-500">
         Nilai minimum, rata-rata, dan maksimum
-        dihitung berdasarkan {totalReadings} pembacaan
+        dihitung dari {totalReadings} pembacaan
         selama {periodLabel} terakhir.
       </p>
 
@@ -416,6 +416,12 @@ function MetricCard({
             type="high"
           />
         </div>
+
+        <p className="mt-4 text-xs leading-5 text-slate-500">
+          Ringkasan diatas menampilkan tiga indikator
+          yang menunjukkan kondisi tanaman dalam
+          rentang waktu yang dipilih.
+        </p>
       </div>
     </article>
   );
