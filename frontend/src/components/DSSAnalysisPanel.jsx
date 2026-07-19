@@ -22,7 +22,6 @@ function formatNumber(value) {
   ).format(number);
 }
 
-
 function formatDateTime(value) {
   if (!value) {
     return "-";
@@ -68,6 +67,7 @@ function DSSAnalysisPanel({
       if (!plantId) {
         setAnalysis(null);
         setErrorMessage("");
+
         return;
       }
 
@@ -157,8 +157,8 @@ function DSSAnalysisPanel({
         </h2>
 
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Belum ada data sensor pada
-          rentang waktu yang dipilih.
+          Belum tersedia data sensor
+          pada rentang waktu yang dipilih.
         </p>
       </section>
     );
@@ -193,18 +193,31 @@ function DSSAnalysisPanel({
 
             <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3">
               <p className="text-xs font-semibold text-slate-600">
-                Rentang analisis: {analysis.range_label} terakhir
+                Rentang analisis:{" "}
+                {analysis.range_label} terakhir
               </p>
 
               <p className="mt-1 text-xs leading-5 text-slate-500">
-                Kesimpulan dihitung dari {analysis.total_readings} pembacaan yang tersedia pada rentang waktu tersebut.
+                Analisis dihitung berdasarkan{" "}
+                {analysis.total_readings} pembacaan
+                yang tersedia dalam rentang waktu
+                tersebut.
               </p>
 
-              {analysis.period_start && analysis.period_end && (
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Data pengukuran tersedia dari {formatDateTime(analysis.period_start)} sampai {formatDateTime(analysis.period_end)}.
-                </p>
-              )}
+              {analysis.period_start &&
+                analysis.period_end && (
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Data pengukuran tersedia sejak{" "}
+                    {formatDateTime(
+                      analysis.period_start,
+                    )}{" "}
+                    hingga{" "}
+                    {formatDateTime(
+                      analysis.period_end,
+                    )}
+                    .
+                  </p>
+                )}
             </div>
           </div>
 
@@ -323,7 +336,7 @@ function MetricCard({
           </h3>
 
           <p className="mt-1 text-xs text-slate-500">
-            Batas ideal{" "}
+            Rentang ideal{" "}
             {formatNumber(
               metric.ideal_minimum,
             )}
@@ -341,7 +354,9 @@ function MetricCard({
       </div>
 
       <p className="mt-4 text-xs leading-5 text-slate-500">
-        Nilai minimum, rata-rata, dan maksimum dihitung dari {totalReadings} pembacaan selama {periodLabel} terakhir.
+        Nilai minimum, rata-rata, dan maksimum
+        dihitung berdasarkan {totalReadings} pembacaan
+        selama {periodLabel} terakhir.
       </p>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
@@ -372,16 +387,13 @@ function MetricCard({
 
       <div className="mt-5 rounded-xl bg-white p-4">
         <p className="text-xs font-semibold text-slate-700">
-          Distribusi kondisi selama {periodLabel} terakhir
-        </p>
-
-        <p className="mt-1 text-[11px] leading-5 text-slate-500">
-          “Di bawah rata-rata” pada ringkasan ini mengacu pada pembacaan di bawah batas minimum ideal tanaman.
+          Distribusi kondisi selama{" "}
+          {periodLabel} terakhir
         </p>
 
         <div className="mt-4 space-y-3">
           <PercentageBar
-            label="Di bawah rata-rata"
+            label="Di bawah batas ideal"
             value={
               metric.below_percent
             }
@@ -389,17 +401,21 @@ function MetricCard({
           />
 
           <PercentageBar
-            label="Dalam kondisi ideal"
+            label="Dalam rentang ideal"
             value={
               metric.normal_percent
             }
             type="normal"
           />
-        </div>
 
-        <p className="mt-3 text-[11px] leading-5 text-slate-400">
-          Ringkasan menampilkan dua indikator yang diminta. Persentase tidak selalu berjumlah 100% karena pembacaan di atas batas ideal tidak ditampilkan.
-        </p>
+          <PercentageBar
+            label="Di atas batas ideal"
+            value={
+              metric.above_percent
+            }
+            type="high"
+          />
+        </div>
       </div>
     </article>
   );
@@ -433,13 +449,17 @@ function PercentageBar({
   type,
 }) {
   const safeValue = Math.min(
-    Math.max(Number(value) || 0, 0),
+    Math.max(
+      Number(value) || 0,
+      0,
+    ),
     100,
   );
 
   const barClass = {
     low: "bg-amber-500",
     normal: "bg-emerald-600",
+    high: "bg-red-500",
   }[type] ?? "bg-slate-500";
 
   return (

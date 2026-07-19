@@ -67,6 +67,19 @@ var allowedHistoryRanges = map[string]historyRange{
 }
 
 func GetSensorHistory(c *gin.Context) {
+	c.Header(
+		"Cache-Control",
+		"no-store, no-cache, must-revalidate, max-age=0",
+	)
+	c.Header(
+		"Pragma",
+		"no-cache",
+	)
+	c.Header(
+		"Expires",
+		"0",
+	)
+
 	plantID, err := strconv.Atoi(
 		c.Param("plant_id"),
 	)
@@ -145,14 +158,31 @@ func GetSensorHistory(c *gin.Context) {
 	rows, err := config.DB.QueryContext(
 		c.Request.Context(),
 		`
-			SELECT
-				to_timestamp(
+			WITH bucketed_readings AS (
+				SELECT
 					FLOOR(
 						EXTRACT(
 							EPOCH FROM recorded_at
 						) / $2
-					) * $2
-				) AS bucket_time,
+					) AS bucket_number,
+
+					recorded_at,
+					temperature,
+					humidity,
+					soil_moisture
+
+				FROM sensor_logs
+
+				WHERE
+					plant_id = $1
+					AND recorded_at >=
+						NOW() - (
+							$3 * INTERVAL '1 second'
+						)
+			)
+
+			SELECT
+				MAX(recorded_at) AS latest_recorded_at,
 
 				ROUND(
 					AVG(temperature)::numeric,
@@ -169,17 +199,10 @@ func GetSensorHistory(c *gin.Context) {
 					2
 				)::double precision
 
-			FROM sensor_logs
+			FROM bucketed_readings
 
-			WHERE
-				plant_id = $1
-				AND recorded_at >=
-					NOW() - (
-						$3 * INTERVAL '1 second'
-					)
-
-			GROUP BY bucket_time
-			ORDER BY bucket_time ASC
+			GROUP BY bucket_number
+			ORDER BY latest_recorded_at ASC
 		`,
 		plantID,
 		selectedRange.BucketSeconds,

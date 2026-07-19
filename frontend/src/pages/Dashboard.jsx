@@ -237,7 +237,13 @@ function Dashboard() {
   );
 
   const loadHistory = useCallback(
-    async (plantId, range) => {
+    async (
+      plantId,
+      range,
+      {
+        silent = false,
+      } = {},
+    ) => {
       if (!plantId) {
         setHistory(null);
         setHistoryError("");
@@ -245,8 +251,10 @@ function Dashboard() {
         return;
       }
 
-      setIsLoadingHistory(true);
-      setHistoryError("");
+      if (!silent) {
+        setIsLoadingHistory(true);
+        setHistoryError("");
+      }
 
       try {
         const result =
@@ -258,16 +266,26 @@ function Dashboard() {
         setHistory(
           result?.data ?? result,
         );
-      } catch (error) {
-        setHistory(null);
 
-        setHistoryError(
+        setHistoryError("");
+      } catch (error) {
+        const message =
           error instanceof Error
             ? error.message
-            : "Histori sensor gagal dimuat.",
-        );
+            : "Histori sensor gagal dimuat.";
+
+        if (silent) {
+          setRefreshWarning(
+            `Pembaruan histori otomatis gagal: ${message}`,
+          );
+        } else {
+          setHistory(null);
+          setHistoryError(message);
+        }
       } finally {
-        setIsLoadingHistory(false);
+        if (!silent) {
+          setIsLoadingHistory(false);
+        }
       }
     },
     [],
@@ -300,7 +318,7 @@ function Dashboard() {
       return undefined;
     }
 
-    function refreshDashboard() {
+    function refreshDashboardAndHistory() {
       if (
         document.visibilityState !==
         "visible"
@@ -308,17 +326,27 @@ function Dashboard() {
         return;
       }
 
-      loadDashboard(
-        selectedPlantId,
-        {
-          silent: true,
-        },
-      );
+      void Promise.all([
+        loadDashboard(
+          selectedPlantId,
+          {
+            silent: true,
+          },
+        ),
+
+        loadHistory(
+          selectedPlantId,
+          selectedRange,
+          {
+            silent: true,
+          },
+        ),
+      ]);
     }
 
     const intervalId =
       window.setInterval(
-        refreshDashboard,
+        refreshDashboardAndHistory,
         DASHBOARD_REFRESH_INTERVAL_MS,
       );
 
@@ -327,7 +355,7 @@ function Dashboard() {
         document.visibilityState ===
         "visible"
       ) {
-        refreshDashboard();
+        refreshDashboardAndHistory();
       }
     }
 
@@ -348,7 +376,9 @@ function Dashboard() {
     };
   }, [
     selectedPlantId,
+    selectedRange,
     loadDashboard,
+    loadHistory,
   ]);
 
   async function handleReload() {
@@ -419,8 +449,8 @@ function Dashboard() {
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Nilai sensor dan status
-            monitoring diperbarui otomatis
+            Nilai sensor, status monitoring,
+            dan histori diperbarui otomatis
             setiap 30 detik.
           </p>
         </div>
@@ -607,6 +637,7 @@ function Dashboard() {
             />
 
             <DSSAnalysisPanel
+              key={`${selectedPlantId}-${selectedRange}-${history?.end_at ?? "initial"}`}
               plantId={
                 selectedPlantId
               }
