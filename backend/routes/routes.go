@@ -25,6 +25,14 @@ const (
 	deviceMaximumRequests = 30
 
 	deviceRateLimitWindow = time.Minute
+
+	// Endpoint cron hanya dipanggil oleh scheduler eksternal.
+	//
+	// Batas ini mencegah endpoint dibanjiri request
+	// dalam waktu singkat.
+	cronMaximumRequests = 6
+
+	cronRateLimitWindow = time.Minute
 )
 
 func SetupRoutes(
@@ -50,6 +58,29 @@ func SetupRoutes(
 			)
 		},
 	)
+
+	// Endpoint scheduler eksternal.
+	//
+	// Endpoint ini dipanggil oleh Supabase Cron
+	// setiap 30 menit.
+	//
+	// Autentikasi menggunakan Bearer CRON_SECRET
+	// dan diperiksa di cron_controller.go.
+	cronEndpoint := api.Group("/cron")
+
+	cronEndpoint.Use(
+		middleware.RateLimitByIP(
+			cronMaximumRequests,
+			cronRateLimitWindow,
+		),
+	)
+
+	{
+		cronEndpoint.POST(
+			"/collect-sensor",
+			controllers.CollectSensorDataCron,
+		)
+	}
 
 	// Endpoint autentikasi dashboard.
 	//
